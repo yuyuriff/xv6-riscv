@@ -52,3 +52,6 @@ void free(void*);
 int get_sign(char* a);
 int atoi_with_sign(char* x_start, int sign_x);
 void parse_ints(char* buf, int* a, int* b);
+
+// user defined syscall
+long long add(int, int);

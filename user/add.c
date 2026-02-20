@@ -50,7 +50,7 @@ main(int argc, char *argv[])
   int a, b;
   parse_ints(buf, &a, &b);
 
-  long long sum = (long long)a + b;
+  long long sum = add(a, b);
 
   printf("%lld\n", sum);
 

@@ -47,3 +47,8 @@ void printf(const char*, ...) __attribute__ ((format (printf, 1, 2)));
 // umalloc.c
 void* malloc(uint);
 void free(void*);
+
+// user defined
+int get_sign(char* a);
+int atoi_with_sign(char* x_start, int sign_x);
+void parse_ints(char* buf, int* a, int* b);

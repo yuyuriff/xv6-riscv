@@ -4,36 +4,41 @@
 
 #define BUF_SIZE 256
 
-void
+int
 write_buf(int fd, const char* buf, int len)
 {
     int i = 0;
     while (i < len) {
         int written = write(fd, buf + i, len - i);
         if (written <= 0) {
-            fprintf(2, "Write error\n");
-            exit(1);
+            return -1;
         }
         i += written;
     }
+    return 0;
 }
 
-void
+int
 flush_buf(int fd, const char* buf, int* cur)
 {
     if (*cur > 0) {
-        write_buf(fd, buf, *cur);
+        if (write_buf(fd, buf, *cur) < 0) {
+            return -1;
+        }
         *cur = 0;
     }
+    return 0;
 }
 
-void
+int
 add_to_buf(int fd, char *buf, int *cur, const char *str, int len)
 {
   int i = 0;
   while (i < len) {
     if (*cur == BUF_SIZE) {
-      flush_buf(fd, buf, cur);
+      if (flush_buf(fd, buf, cur) < 0) {
+        return -1;
+      }
     }
 
     int available = BUF_SIZE - *cur;
@@ -43,6 +48,8 @@ add_to_buf(int fd, char *buf, int *cur, const char *str, int len)
     *cur += chunk_size;
     i += chunk_size;
   }
+
+  return 0;
 }
 
 int
@@ -95,10 +102,20 @@ main(int argc, char *argv[])
         int cur = 0;
         for (int i = 1; i < argc; i++) {
             int len = strlen(argv[i]);
-            add_to_buf(pipefd[1], buf, &cur, argv[i], len);
-            add_to_buf(pipefd[1], buf, &cur, "\n", 1);
+            if (add_to_buf(pipefd[1], buf, &cur, argv[i], len) < 0) {
+                fprintf(2, "Write error\n");
+                exit(1);
+            }
+            if (add_to_buf(pipefd[1], buf, &cur, "\n", 1) < 0) {
+                fprintf(2, "Write error\n");
+                exit(1);
+            }
         }
-        flush_buf(pipefd[1], buf, &cur);
+        
+        if (flush_buf(pipefd[1], buf, &cur) < 0) {
+            fprintf(2, "Write error\n");
+            exit(1);
+        }
 
         if (close(pipefd[1]) < 0) {
             fprintf(2, "Parent close pipefd[1] error\n");

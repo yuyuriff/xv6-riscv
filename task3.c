@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define BUF_SIZE 8192
+#define BUF_SIZE 4096
 
 int
 write_buf(int fd, const char* buf, int len)

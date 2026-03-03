@@ -2,7 +2,7 @@
 #include "kernel/fcntl.h"
 #include "user/user.h"
 
-#define BUF_SIZE 256
+#define BUF_SIZE 128
 
 int
 write_buf(int fd, const char* buf, int len)

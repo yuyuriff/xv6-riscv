@@ -40,18 +40,39 @@ main(int argc, char *argv[])
 {
     int lim;
     lim = ps_listinfo(0, 1);
+    if (lim < 0) {
+        fprintf(2, "ps_listinfo error\n");
+        exit(1);
+    }
 
     procinfo_s *plist = (procinfo_s *)malloc(lim * sizeof(procinfo_s));
+    if (!plist) {
+        fprintf(2, "Malloc error\n");
+        exit(1);
+    }
+
     int n = ps_listinfo(plist, lim);
     while (n == -1) {
         lim *= 2;
         free(plist);
         plist = (procinfo_s *)malloc(lim * sizeof(procinfo_s));
+        if (!plist) {
+            fprintf(2, "Malloc error\n");
+            exit(1);
+        }
         n = ps_listinfo(plist, lim);
     }
+    if (n == -2) {
+        fprintf(2, "Copyout to user space error\n");
+        exit(1);
+    }
 
-    char* pnames = (char*)malloc(lim * 16);
-    memset(pnames, lim * 16, '\0');
+    char* pnames = (char*)malloc(n * 16);
+    if (!pnames) {
+        fprintf(2, "Malloc error\n");
+        exit(1);
+    }
+    memset(pnames, '\0', n * 16);
     procinfo_s *p;
     for (p = plist; p < &plist[n]; p++) {
         int ppid = p->ppid;
@@ -63,6 +84,7 @@ main(int argc, char *argv[])
             int j = p - plist;
             if (pi->pid == ppid) {
                 memmove(&pnames[j * 16], pi->name, 16);
+                pnames[j * 16 + 15] = '\0';
             }
         }
     }

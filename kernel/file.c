@@ -12,6 +12,7 @@
 #include "file.h"
 #include "stat.h"
 #include "proc.h"
+#include "mutex.h"
 
 struct devsw devsw[NDEV];
 struct {
@@ -60,12 +61,21 @@ void
 fileclose(struct file *f)
 {
   struct file ff;
+  int is_mutex = 0;
+  struct mutex *m = 0;
 
   acquire(&ftable.lock);
   if(f->ref < 1)
     panic("fileclose");
   if(--f->ref > 0){
+    is_mutex = (f->type == FD_MUTEX);
+    m = f->mutex;
     release(&ftable.lock);
+    if (is_mutex) {
+      if (holdingsleep(m->lock)) {
+        releasesleep(m->lock);
+      }
+    }
     return;
   }
   ff = *f;
@@ -75,6 +85,18 @@ fileclose(struct file *f)
 
   if(ff.type == FD_PIPE){
     pipeclose(ff.pipe, ff.writable);
+  } else if (ff.type == FD_MUTEX) {
+    if (holdingsleep(ff.mutex->lock)) {
+      releasesleep(ff.mutex->lock);
+    }
+    struct spinlock *spinlk = &ff.mutex->lock->lk;
+    acquire(spinlk);
+    int locked = ff.mutex->lock->locked;
+    release(spinlk);
+    if (locked) {
+      panic("fileclose mutex locked");
+    }
+    mutexclose(ff.mutex);
   } else if(ff.type == FD_INODE || ff.type == FD_DEVICE){
     begin_op();
     iput(ff.ip);
@@ -108,6 +130,11 @@ fileread(struct file *f, uint64 addr, int n)
 {
   int r = 0;
 
+  // additional check for mutex in case struct gets modified
+  if (f->type == FD_MUTEX) {
+    return -1;
+  }
+
   if(f->readable == 0)
     return -1;
 
@@ -135,6 +162,11 @@ int
 filewrite(struct file *f, uint64 addr, int n)
 {
   int r, ret = 0;
+
+  // additional check for mutex in case struct gets modified
+  if (f->type == FD_MUTEX) {
+    return -1;
+  }
 
   if(f->writable == 0)
     return -1;

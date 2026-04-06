@@ -52,11 +52,11 @@ main(void)
         fail_and_exit("remove_ad heap failed");
     }
 
-    int tmp;
+    volatile int tmp;
     tmp = global;
     tmp += stack_var;
     tmp += stack_array[10];
-    tmp += heap_array[0];
+    tmp += heap_array[12];
 
     printf("\nAfter read:\n");
     check_flags("global", (void *)&global, sizeof(global));

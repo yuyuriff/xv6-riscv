@@ -42,3 +42,6 @@ entry("getpid");
 entry("sbrk");
 entry("pause");
 entry("uptime");
+entry("ptprint");
+entry("check_ad");
+entry("remove_ad");

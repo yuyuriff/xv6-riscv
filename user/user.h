@@ -24,6 +24,9 @@ int getpid(void);
 char* sys_sbrk(int,int);
 int pause(int);
 int uptime(void);
+int ptprint(void);
+int check_ad(void*, int, int);
+int remove_ad(void*, int, int);
 
 // ulib.c
 int stat(const char*, struct stat*);

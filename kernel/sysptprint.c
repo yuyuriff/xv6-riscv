@@ -43,7 +43,7 @@ print_by_level(pagetable_t pt, int level)
         uint64 pa = PTE2PA(pte);
         printf("0x%x -> %p %s\n", i, (void*)pa, flags);
 
-        if ((pte & (PTE_R|PTE_W|PTE_X)) == 0) {
+        if (level < 2) {
             print_by_level((pagetable_t)pa, level + 1);
         }
     }

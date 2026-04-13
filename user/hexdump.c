@@ -1,6 +1,7 @@
 #include "kernel/types.h"
 #include "user/user.h"
 #include "kernel/fcntl.h"
+#include "kernel/stat.h"
 
 #define BUF_SIZE 32
 
@@ -12,7 +13,7 @@ hexdump(int fd, int n) {
     int target = n;
     
     while (target > 0) {
-        int expected_read_size = (n < size) ? n : size;
+        int expected_read_size = (target < size) ? target : size;
         read_size = read(fd, buf, expected_read_size);
 
         if (read_size < 0) {
@@ -55,36 +56,26 @@ main(int argc, char *argv[]) {
         exit(1);
     }
     
-    if (strcmp(argv[2], "null") == 0) {
-        if ((fd = open("null", O_RDONLY)) < 0) {
-            fprintf(2, "Cannot open null\n");
-            exit(1);
-        }
-    }
-    else if (strcmp(argv[2], "urandom") == 0) {
-        if ((fd = open("urandom", O_RDONLY)) < 0) {
-            fprintf(2, "Cannot open urandom\n");
-            exit(1);
-        }
-    } else if (strcmp(argv[2], "zero") == 0) {
-        if ((fd = open("zero", O_RDONLY)) < 0) {
-            fprintf(2, "Cannot open zero\n");
-            exit(1);
-        }
-    } else if (strcmp(argv[2], "nullstat") == 0) {
-        if ((fd = open("nullstat", O_RDONLY)) < 0) {
-            fprintf(2, "Cannot open nullstat\n");
-            exit(1);
-        }
-    } else {
-        fprintf(2, "Unknown device\n");
-        exit(1);
-    }
+    char *f = argv[2];
+    struct stat st;
     
-    if (hexdump(fd, n)  < 0) {
-        fprintf(2, "Read error\n");
+    if (stat(f, &st) < 0) {
+        fprintf(2, "No such file\n");
         exit(1);
     }
+
+    fd = open(f, O_RDONLY);
+    if (fd < 0) {
+        fprintf(2, "Cannot open file\n");
+        exit(1);
+    }
+
+    int code = hexdump(fd, n);
+    if (code < 0) {
+        fprintf(2, "Read error");
+        exit(1);
+    }
+
     close(fd);
     exit(0);
 }

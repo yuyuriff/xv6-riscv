@@ -23,24 +23,21 @@ main(void)
   dup(0);  // stdout
   dup(0);  // stderr
 
-  if (open("null", O_RDWR) < 0) {
+  struct stat st;
+  if (stat("null", &st) < 0) {
     mknod("null", NEW_DRIVER, NULL_MINOR);
-    open("null", O_RDWR);
   }
 
-  if (open("zero", O_RDONLY) < 0) {
+  if (stat("zero", &st) < 0) {
     mknod("zero", NEW_DRIVER, ZERO_MINOR);
-    open("zero", O_RDONLY);
   }
 
-  if (open("urandom", O_RDWR) < 0) {
+  if (stat("urandom", &st) < 0) {
     mknod("urandom", NEW_DRIVER, URAND_MINOR);
-    open("urandom", O_RDWR);
   }
 
-  if (open("nullstat", O_RDWR) < 0) {
+  if (stat("nullstat", &st) < 0) {
     mknod("nullstat", NEW_DRIVER, NULLSTAT_MINOR);
-    open("nullstat", O_RDWR);
   } 
 
   for(;;){

@@ -1,6 +1,7 @@
 #include "kernel/types.h"
 #include "user/user.h"
 #include "kernel/fcntl.h"
+#include "kernel/stat.h"
 
 #define BUF_SIZE 64
 
@@ -98,33 +99,18 @@ main(int argc, char *argv[]) {
     }
 
     int fd;
-    char *str;
-
-    str = argv[1];
+    char *str = argv[1];
+    char *f = argv[2];
+    struct stat st;
     
-    if (strcmp(argv[2], "null") == 0) {
-        if ((fd = open("null", O_WRONLY)) < 0) {
-            fprintf(2, "Cannot open null\n");
-            exit(1);
-        }
+    if (stat(f, &st) < 0) {
+        fprintf(2, "No such file\n");
+        exit(1);
     }
-    else if (strcmp(argv[2], "urandom") == 0) {
-        if ((fd = open("urandom", O_WRONLY)) < 0) {
-            fprintf(2, "Cannot open urandom\n");
-            exit(1);
-        }
-    } else if (strcmp(argv[2], "zero") == 0) {
-        if ((fd = open("zero", O_WRONLY)) < 0) {
-            fprintf(2, "Cannot open zero\n");
-            exit(1);
-        }
-    } else if (strcmp(argv[2], "nullstat") == 0) {
-        if ((fd = open("nullstat", O_WRONLY)) < 0) {
-            fprintf(2, "Cannot open nullstat\n");
-            exit(1);
-        }
-    } else {
-        fprintf(2, "Unknown device");
+
+    fd = open(f, O_WRONLY);
+    if (fd < 0) {
+        fprintf(2, "Cannot open file\n");
         exit(1);
     }
     
@@ -139,6 +125,7 @@ main(int argc, char *argv[]) {
         fprintf(2, "Hex string must have even length\n");
         exit(1);
     }
+    
     close(fd);
     exit(0);
 }

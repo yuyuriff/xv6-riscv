@@ -9,10 +9,8 @@
 #include "defs.h"
 #include "proc.h"
 
-struct {
 #define ZERO_BUF_SIZE 32
-    char buf[ZERO_BUF_SIZE];
-} zero;
+char zero_buf[ZERO_BUF_SIZE] = {0};
 
 struct {
     struct spinlock lock;
@@ -43,7 +41,7 @@ zeroread(int user_dst, uint64 dst, int n, int m) {
 
     while (target > 0) {
         read_size = (target < size) ? target : size;
-        if (either_copyout(user_dst, i, zero.buf, read_size) == -1) {
+        if (either_copyout(user_dst, i, zero_buf, read_size) == -1) {
             break;
         }
 
@@ -162,11 +160,6 @@ driverwrite(int user_src, uint64 src, int n, int m) {
 }
 
 void
-zero_init() {
-    memset(zero.buf, 0, ZERO_BUF_SIZE);
-}
-
-void
 nullstat_init() {
     initlock(&nullstat.lock, "nullstat");
     nullstat.stat = 0;
@@ -180,7 +173,6 @@ urand_init() {
 
 void
 driverinit() {
-    zero_init();
     urand_init();
     nullstat_init();
 

@@ -1,8 +1,8 @@
 #include "kernel/types.h"
 #include "user/user.h"
 
-#define NANO 1000000000UL
-#define MIL  1000000UL
+#define NANO 1000000000L
+#define MIL  1000000L
 
 #define SEC_IN_DAY (60 * 60 * 24)
 #define SEC_IN_HOUR 3600
@@ -55,37 +55,52 @@ static void
 print_helper_msec(uint64 x)
 {
     if (x < 10) {
-        printf("00%lu", x);
+        printf("00%ld", x);
         return;
     }
     if (x < 100) {
-        printf("0%lu", x);
+        printf("0%ld", x);
         return;
     }
-    printf("%lu", x);
+    printf("%ld", x);
+}
+
+static long
+signed_mod(long a, long b, long *div) {
+    long result = a % b;
+    if (result < 0) {
+        result += b;
+        *div -= 1;
+    }
+    return result;
 }
 
 int
 main(int argc, char *argv[])
 {
-    uint64 time = rtc();
-    uint64 rtc_sec = time / NANO;
-    uint64 rest_nsec = time % NANO;
-    uint64 msec = rest_nsec / MIL;
+    long time = rtc();
+    long rtc_sec = time / NANO;
+    long rest_nsec = signed_mod(time, NANO, &rtc_sec);
+    long msec = rest_nsec / MIL;
 
-    uint64 days = rtc_sec / SEC_IN_DAY;
-    uint64 rest_sec = rtc_sec % SEC_IN_DAY;
+    long days = rtc_sec / SEC_IN_DAY;
+    long rest_sec = signed_mod(rtc_sec, SEC_IN_DAY, &days);
 
     int hour = rest_sec / SEC_IN_HOUR;
     int min = (rest_sec % SEC_IN_HOUR) / SEC_IN_MINUTE;
     int sec = rest_sec % SEC_IN_MINUTE;
 
     int year = 1970;
-    int dy = days_in_year(year);
-    while (days >= dy) {
-        days-= dy;
-        year++;
-        dy = days_in_year(year);
+    if (days >= 0) {
+        while (days >= days_in_year(year)) {
+            days -= days_in_year(year);
+            year++;
+        }
+    } else {
+        while (days < 0) {
+            year--;
+            days += days_in_year(year);
+        }
     }
     int month = 1;
     int dm = days_in_month(month, year);

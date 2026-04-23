@@ -10,6 +10,8 @@
 
 #define NORMAL_YEAR_DAYS 365
 
+#define DAYS_IN_400_YEARS 146097
+
 static int
 is_leap_year(int year)
 {
@@ -52,7 +54,7 @@ print_helper_dt(int x)
 }
 
 static void
-print_helper_msec(uint64 x)
+print_helper_msec(long x)
 {
     if (x < 10) {
         printf("00%ld", x);
@@ -91,17 +93,15 @@ main(int argc, char *argv[])
     int sec = rest_sec % SEC_IN_MINUTE;
 
     int year = 1970;
-    if (days >= 0) {
-        while (days >= days_in_year(year)) {
-            days -= days_in_year(year);
-            year++;
-        }
-    } else {
-        while (days < 0) {
-            year--;
-            days += days_in_year(year);
-        }
+    long y400 = days / DAYS_IN_400_YEARS;
+    days = signed_mod(days, DAYS_IN_400_YEARS, &y400);
+    year += (400 * y400);
+
+    while (days >= days_in_year(year)) {
+        days -= days_in_year(year);
+        year++;
     }
+
     int month = 1;
     int dm = days_in_month(month, year);
     while (days >= dm) {

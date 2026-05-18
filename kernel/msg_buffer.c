@@ -206,7 +206,10 @@ rbuffer_copyout(uint64 dst, int max_size)
     copied = 0;
     total = rbuffer.n;
 
-    if (rbuffer.n == rbuffer.size) {
+    if (rbuffer.n > 0 && *cur == '\n') {
+      cur = get_next(cur);
+      total--;
+    } else if (rbuffer.n == rbuffer.size) {
         int before_newline = 0;
 
         while (before_newline < total) {

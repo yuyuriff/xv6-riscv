@@ -1,6 +1,7 @@
 #include "kernel/types.h"
 #include "kernel/logger.h"
 #include "user/user.h"
+#include <stdio.h>
 
 static int
 isnum(char *s)
@@ -27,6 +28,8 @@ usage(void)
     fprintf(2, "  logset irq [ticks]\n");
     fprintf(2, "  logset proc [ticks]\n");
     fprintf(2, "  logset exec [ticks]\n");
+    fprintf(2, " or combination of flags with [ticks]\n");
+    fprintf(2, " ex: logset irq proc 50");
     exit(1);
 }
 
